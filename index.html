@@ -1,0 +1,656 @@
+<!doctype html>
+
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" 
+    href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" 
+    integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" 
+    crossorigin="anonymous">
+
+    <title>OrganiZapp!</title>
+
+    <!-- TODO: Add SDKs for Firebase products that you want to use
+     https://firebase.google.com/docs/web/setup#available-libraries -->
+    <script src="https://www.gstatic.com/firebasejs/7.2.3/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/7.2.3/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/7.2.3/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/7.2.3/firebase-database.js"></script>
+    <script
+    src="https://code.jquery.com/jquery-3.4.1.min.js"
+    integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+    crossorigin="anonymous"></script>
+    <script lang="javascript" src="js/xlsx.full.min.js"></script>
+  </head>
+  
+  <body>
+
+    
+<!-------------------------------------------Area de Acceso y Salida------------------------------------------------>
+<div class="container">
+  <h4>Area de Acceso (Todos los Usuarios)</h4>
+  <input id="emailAcceso" type="email" placeholder="Ingresa Email" class="form-control my-3">
+  <input id="contrasenaAcceso" type="password" placeholder="Ingresa Contraseña" class="form-control my-3">
+  <button onclick="accesar()" class="btn btn-info">Accesar</button>
+  <h5 id="logStatus"> </h5>
+  <h5 id="rol"></h5>
+  <button id="salir" onclick="salir()" class="btn btn-danger">Salir</button>
+  <!--<h3 id="userUid">User UID</h3>-->
+  </div>
+  <script>
+  // Initialize Cloud Firestore through Firebase
+  firebase.initializeApp({
+    apiKey: "AIzaSyCUxJMJjoUfIJDQ1xyBuJlfqHk_9QZlssw",
+    authDomain: "organizapp-c1c2f.firebaseapp.com",
+    databaseURL: "https://organizapp-c1c2f.firebaseio.com",
+    projectId: "organizapp-c1c2f",
+    storageBucket: "organizapp-c1c2f.appspot.com",
+    messagingSenderId: "115370467560",
+    appId: "1:115370467560:web:1a4ce509c6fb4e131aa95d",
+    measurementId: "G-H4N3JBVJ1R"
+    });
+    
+    var db = firebase.firestore();
+    var database = firebase.database();
+  
+  //Instalacion del observador de usuarios 
+        firebase.auth().onAuthStateChanged(function(user) {
+        if (user) {
+        // si User esta activo
+        var displayName = user.displayName;
+        var email = user.email;
+        var emailVerified = user.emailVerified;
+        var isAnonymous = user.isAnonymous;
+        var uid = user.uid;
+        var emailVerificado="";
+        var miref = firebase.database().ref('bancoDeAnfitriones/'+ uid );
+          miref.once('value', snapshot => {
+            var miRol=snapshot.val().srol;
+            document.getElementById("rol").innerHTML="Rol:  " + miRol;
+          });
+  
+        if (emailVerified===false){
+        emailVerificado="Email No Verificado";
+        }else{
+        emailVerificado="Email Verificado";
+        firebase.database().ref('bancoDeAnfitriones/'+ uid ).update({
+          verificado: emailVerified,
+        });
+        }
+        var providerData = user.providerData;
+        document.getElementById("logStatus").innerHTML="Activo como:  " + user.email +"<br/>"+
+         emailVerificado + "<br/>"+"User UID: " + user.uid;
+        
+        //document.getElementById("userUid").innerHTML="User UID: "+user.uid;
+       // console.log(user.email);
+       // console.log(uid);
+  
+        } else {
+        // User is signed out.
+        document.getElementById("logStatus").innerHTML="No Activo";
+        }
+        });
+  
+      function accesar(){
+            var emailacceso = document.getElementById('emailAcceso').value;
+            var contrasenaacceso = document.getElementById('contrasenaAcceso').value;
+          firebase.auth().signInWithEmailAndPassword(emailacceso, contrasenaacceso)
+  
+            .catch(function(error) {
+            // Mensajes de error
+              var errorCode = error.code;
+              var errorMessage = error.message;
+              alert(errorMessage);
+            });
+              document.getElementById('emailAcceso').value="";
+              document.getElementById('contrasenaAcceso').value="";
+          }
+          function salir(){
+            firebase.auth().signOut().then(function(){
+              console.log("Has Salido");
+            
+            })
+            .catch(function(error){
+              alert("Error al Salir");
+            })
+             document.getElementById("rol").innerHTML="";
+          }
+  
+  /*         var ref = firebase.database().ref('bancoDeAnfitriones');
+          ref.on('value', verDatos, errData);
+  ////codigo que genera una lista de los datos en los registros en firebase database
+          function verDatos(datos){
+            var queRol=datos.val();
+            var keys=Object.keys(queRol);
+            console.log(keys);
+            for (var i=0; i<keys.length; i++){
+              var k=keys[i];
+              var initials=queRol[k].srol;
+              var score=queRol[k].verificado;
+              console.log(initials,score);
+              document.getElementById("rol").innerHTML="Rol:  " + initials;
+            }
+          }
+          function errData(error){
+            console.log('Error');
+            console.log(err);
+          }
+  
+  ////codigo que genera una lista de registros en firebase database
+          var ref = firebase.database().ref('bancoDeAnfitriones');
+          ref.once('value', snapshot => {
+            console.log(snapshot.val());
+          }); */
+  
+  </script>
+  <hr/>
+  <hr/>
+    <!--------------------Area para Agregar, Editar y Eliminar Usuarios (Administradores y Anfitriones)----------------------------------------->
+    <div class="container">
+      <h4 id="titulo">Agregar Usuarios(solo Administrador(es))</h4>
+      <input id="nombre" type="text" placeholder="Ingresa el Nombre" class="form-control my-3">
+      <input id="pApellido" type="text" placeholder="Ingresa el Primer Apellido" class="form-control my-3">
+      <input id="sApellido" type="text" placeholder="Ingresa el Segundo Apellido" class="form-control my-3">
+      <input id="tel" type="tel" placeholder="Tel sin Signos" class="form-control my-3">
+      <input id="email" type="email" placeholder="Ingresa Email" class="form-control my-3">
+      <input id="contrasena" type="password" placeholder="Ingresa Contraseña" class="form-control my-3">
+      <input id="confirmaContrasena" type="password" placeholder="Confirma Contraseña" class="form-control my-3">
+      <p><input type="checkbox" id="esAdmin" class="checkbox-inline">Es Administrador</p>
+      <button onclick="registrar()" class="btn btn-info">Registrar</button>
+  </div>
+  <hr/>
+  <hr/>
+<script>
+  
+function registrar(){
+  //verifica que la contraseña y su confirmación coincidan para proceder a registrar
+  if(document.getElementById('contrasena').value!==document.getElementById('confirmaContrasena').value){
+    alert("Verifica la Contraseña");
+   }else
+ {
+  var email = document.getElementById('email').value;
+  var contrasena = document.getElementById('contrasena').value;
+
+ firebase.auth().createUserWithEmailAndPassword(email, contrasena)
+  .catch(function(error) {
+   // Mensajes de Error en Crear Usuario
+    var errorCode = error.code;
+    var errorMessage = error.message;
+    alert(error.message);
+  })
+  .then(function(){
+    enviarEmail();
+    writeUserData();
+  })
+}
+}
+
+function enviarEmail(){
+  var user = firebase.auth().currentUser;
+  user.sendEmailVerification().then(function() {
+  // Se envía mensaje
+  alert("Email Enviado")
+}).catch(function(error) {
+  // Error al enviar mensaje
+  alert("Ha Ocurrido un Error");
+});
+}
+
+//si hay cambios al registrarse
+function writeUserData(){
+  firebase.auth().onAuthStateChanged(function(user) {
+    if (user) {
+      // Si el usuario está activo
+      //var displayName = user.displayName;
+      var email = user.email;
+      var emailVerified = user.emailVerified;
+      //var photoURL = user.photoURL;
+      //var isAnonymous = user.isAnonymous;
+      var uid = user.uid;
+
+
+      //Asignar Rol
+        var esadmin = document.getElementById("esAdmin").checked;
+        var rol="";
+        if(esadmin===true){
+          rol="ADMIN";
+        }else{
+          rol="ANFITRION";
+        }
+
+        //Registrar Usuarios con Rol
+        firebase.database().ref('bancoDeAnfitriones/'+ uid ).set({
+          email : email,
+          nombre : document.getElementById('nombre').value.toUpperCase(),
+          papellido : document.getElementById('pApellido').value.toUpperCase(),
+          sapellido : document.getElementById('sApellido').value.toUpperCase(),
+          tel : document.getElementById('tel').value,
+          srol: rol,
+          verificado: emailVerified,
+
+        })
+        .then(salir());
+            document.getElementById('nombre').value = "";
+            document.getElementById('pApellido').value = "";
+            document.getElementById('sApellido').value = "";
+            document.getElementById('curp').value = "";
+            document.getElementById('tel').value = "";
+            document.getElementById('email').value = "";
+            document.getElementById('contrasena').value = ""; 
+            document.getElementById('confirmaContrasena').value = "";
+            //document.getElementById('esAdmin').value= false; 
+         }
+
+      }) 
+    }
+ 
+</script>
+
+
+<!------------------------------------------Agregar, Editar y Eliminar Eventos ----------------------------------------------------------->
+<div class="container">
+  <h4>Area de Carga de Eventos (Solo Admin)</h4>
+  <input id="nombreEvento" type="text" placeholder="Nombre del Evento" class="form-control my-3">
+  <input id="descripcionEvento" type="text" placeholder="Descripción del Evento" class="form-control my-3">
+  <p><input id="fechanEvento" type="date" placeholder="Fecha del Evento" style="width: auto"> Fecha</p>
+  <p><input id="horaInicio" type="time" placeholder="Hora de Inicio" style="width: auto"> Inicio</p>
+  <p><input id="horaFin" type="time" placeholder="Hora de Finalización" style="width: auto"> Finalización</p>
+  <button id="registraEvento" onclick="registrarEvento()" class="btn btn-info">Registrar Evento</button>
+  <button id="consultaEvento" onclick="consultarEventos()" class="btn btn-info">Consultar Eventos</button>
+  <button id="editaEvento" onclick="editarEvento()" class="btn btn-warning">Editar Evento</button>
+  <hr/>
+
+</div>
+    <script>
+   
+      function registrarEvento(){
+        var nombreEv=document.getElementById('nombreEvento').value.toUpperCase();
+          firebase.database().ref('eventos/'+ nombreEv).push({
+          nombre: document.getElementById('nombreEvento').value.toUpperCase(),
+          descripcion: document.getElementById('descripcionEvento').value.toUpperCase(),
+          fecha: document.getElementById('fechanEvento').value,
+    //Falta Los valores de hora no se insertan en la base de datos
+          horainicio:document.getElementById('horaInicio').value,
+          horafin:document.getElementById('horaFin').value,
+            })
+        }
+     ////codigo que genera una lista de registros en firebase database
+     function consultarEventos(){
+     var ref = firebase.database().ref('eventos');
+        ref.once('value', snapshot => {
+          console.log(snapshot.val());
+        }); 
+      }
+    
+    </script>
+
+
+<!------------------------------Agregar, Editar y Eliminar Beneficiarios----------------------------------->
+<div class="container">
+    <h4 id="titulo">Agregar, Editar y Eliminar Beneficiarios</h4>
+    <input type="text" id="nombreb" placeholder="Nombre" class="form-control my-3">
+    <input type="text" id="papellido" placeholder="Primer Apellido" class="form-control my-3">
+    <input type="text" id="sapellido" placeholder="Segundo Apellido" class="form-control my-3">
+    <input type="text" id="curp" placeholder="CURP" class="form-control my-3">
+    <input type="text" id="tel" placeholder="Celular" class="form-control my-3">
+    <input type="text" id="correo" placeholder="Correo" class="form-control my-3">
+    <button class="btn btn-info" id="boton" onclick="guardar()">Registrar</button>
+
+    <table class="table-responsive">
+        <thead>
+          <tr>
+           <!-- <th scope="col">Id</th>-->
+            <th scope="col">P Apellido</th>
+            <th scope="col">S Apellido</th>
+            <th scope="col">Nombre</th>
+            <th scope="col">CURP</th>
+            <th scope="col">cel</th>
+            <th scope="col">correo</th>
+            <th scope="col">Editar</th>
+            <th scope="col">Eliminar</th>
+          </tr>
+        </thead>
+        <tbody id="tabla">
+        </tbody>
+      </table>
+</div>
+<script>
+
+//Agregar Registros Firestore
+function guardar(){
+    var papellido = document.getElementById('papellido').value.toUpperCase();
+    var sapellido = document.getElementById('sapellido').value.toUpperCase();
+    var nombre = document.getElementById("nombreb").value.toUpperCase();
+    var curp = document.getElementById('curp').value.toUpperCase();
+    var tel = document.getElementById('tel').value;
+    var correo = document.getElementById('correo').value;
+
+
+    //----Escribir en Firebase Database
+    var rel=firebase.database().ref('eventos/evento1/beneficiarios/'+papellido+
+    " "+sapellido+" "+nombre+" "+curp);
+  rel.set({
+      PRIMERAPELLIDO: papellido,
+      SEGUNDOAPELLIDO: sapellido,
+      NOMBRE: nombre,
+      CURP: curp,
+      CELULAR: tel,
+      CORREO: correo,
+  })
+   //----Escribir en Cloud Firestore
+   db.collection("eventos/evento1/beneficiarios").add({
+      PRIMERAPELLIDO: papellido,
+      SEGUNDOAPELLIDO: sapellido,
+      NOMBRE: nombre,
+      CURP: curp,
+      CELULAR: tel,
+      CORREO: correo,
+  })
+
+   .then(function(docRef){
+      console.log("Registrado con el ID: ", docRef.id);
+       document.getElementById('papellido').value = "";
+      document.getElementById('sapellido').value = "";
+      document.getElementById('nombreb').value = "";
+      document.getElementById('curp').value = "";
+      document.getElementById('tel').value = "";
+      document.getElementById('correo').value = ""; 
+  })
+  .catch(function(error){
+      console.log("Error al agregar el registro: ", error);
+      document.getElementById('papellido').value = "";
+      document.getElementById('sapellido').value = "";
+      document.getElementById('nombreb').value = "";
+      document.getElementById('curp').value = "";
+      document.getElementById('tel').value = "";
+      document.getElementById('correo').value = "";
+}) 
+}//cierra funcion guardar
+
+//Leer Registros     //<th scope="row">${doc.id}</th>
+/* var tabla = document.getElementById('tabla');
+db.collection("eventos/evento1/beneficiarios").onSnapshot((querySnapshot) => {
+  tabla.innerHTML="";
+  querySnapshot.forEach((doc) => {
+     // console.log(`${doc.id} => ${doc.data().nombre}`);
+        tabla.innerHTML += `
+        <tr>
+        <td>${doc.data().papellido}</td>
+        <td>${doc.data().sapellido}</td>
+        <th>${doc.data().nombre}</td>
+        <td scoope="row">${doc.data().curp}</td>
+        <td>${doc.data().tel}</td>
+        <td>${doc.data().correo}</td>
+        <td><button class="btn btn-warning" onclick="editar('${doc.id}','${doc.data().nombre}',
+              '${doc.data().papellido}','${doc.data().sapellido}','${doc.data().curp}','${doc.data().tel}','${doc.data().correo}')">Editar</button></td>
+        <td><button class="btn btn-danger" onclick="eliminar('${doc.id}')">Eliminar</button></td>
+      </tr>
+        `
+
+    });
+}); */
+// Ver Registros en Cloud Firestore
+var tabla = document.getElementById('tabla');
+db.collection("eventos/evento1/beneficiarios").onSnapshot((querySnapshot) => {
+  tabla.innerHTML="";
+  querySnapshot.forEach((doc) => {
+     // console.log(`${doc.id} => ${doc.data().nombre}`);
+        tabla.innerHTML += `
+        <tr>
+        <td>${doc.data().PRIMERAPELLIDO}</td>
+        <td>${doc.data().SEGUNDOAPELLIDO}</td>
+        <th>${doc.data().NOMBRE}</td>
+        <td scoope="row">${doc.data().CURP}</td>
+        <td>${doc.data().CELULAR}</td>
+        <td>${doc.data().CORREO}</td>
+        <td><button class="btn btn-warning" onclick="editar('${doc.id}','${doc.data().NOMBRE}',
+              '${doc.data().PRIMERAPELLIDO}','${doc.data().SEGUNDOAPELLIDO}','${doc.data().CURP}','${doc.data().CELULAR}','${doc.data().CORREO}')">Editar</button></td>
+        <td><button class="btn btn-danger" onclick="eliminar('${doc.id}')">Eliminar</button></td>
+      </tr>
+        `
+
+    });
+});
+
+//Borrar Registros
+function eliminar(id){
+  db.collection("eventos/evento1/beneficiarios").doc(id).delete().then(function(){
+    console.log("Registro Eliminado");
+  }).catch(function(error){
+    console.error("Error al borrar Registro: ", error);
+  })
+} //Cierra funcion eliminar
+
+
+//Editar Registros de Docunentos
+function editar(id,NOMBRE,PRIMERAPELLIDO,SEGUNDOAPELLIDO,CURP,CELULAR,CORREO){
+
+      document.getElementById('papellido').value=PRIMERAPELLIDO;
+      document.getElementById('sapellido').value=SEGUNDOAPELLIDO;
+      document.getElementById('nombreb').value=NOMBRE;
+      document.getElementById('curp').value=CURP;
+      document.getElementById('tel').value=CELULAR;
+      document.getElementById('correo').value=CORREO;
+      var boton=document.getElementById('boton');
+      boton.innerHTML='Editar';
+      var titulo=document.getElementById('titulo');
+      titulo.innerHTML='Editar Beneficiarios';
+
+      boton.onclick=function(){
+  var editado = db.collection("eventos/evento1/beneficiarios").doc(id);
+
+    var papellido = document.getElementById('papellido').value.toUpperCase();
+    var sapellido = document.getElementById('sapellido').value.toUpperCase();
+    var nombre = document.getElementById("nombreb").value.toUpperCase();
+    var curp = document.getElementById('curp').value.toUpperCase();
+    var tel = document.getElementById('tel').value;
+    var correo = document.getElementById('correo').value;
+
+    return editado.update({
+      PRIMERAPELLIDO: papellido,
+      SEGUNDOAPELLIDO: sapellido,
+      NOMBRE: nombre,
+      CURP: curp,
+      CELULAR: tel,
+      CORREO: correo,
+    })
+    .then(function() {
+      console.log("Registro Actualizado!");
+      document.getElementById('papellido').value = "";
+      document.getElementById('sapellido').value = "";
+      document.getElementById('nombreb').value = "";
+      document.getElementById('curp').value = "";
+      document.getElementById('tel').value = "";
+      document.getElementById('correo').value = "";
+      boton.innerHTML='Registrar';
+      boton.onclick = guardar;
+      titulo.innerHTML='Registrar Beneficiarios';
+    
+    })
+    .catch(function(error) {
+        // The document probably doesn't exist.
+        console.error("Error updating document: ", error);
+    });
+}//cierra funcion anonima de boton
+}//cierra funcion editar
+</script>
+<!----------------------------------------------------------------------------------  -->
+<!--El siguiente codigo transforma un archivo xlsx en JSON, y lo sube a la base de d Firebase--  -->
+<!--marca:TypeError: firebase.database(...).ref(...).update(...) is not a function, pero sí funciona-->
+<div class="container">
+<h4>Carga de Beneficiarios por archivo xls</h4>
+<h4>(Solo Admin)</h4>
+</script>
+<input type="file" id="fileUploader" name="fileUploader" accept=".xls, .xlsx" class="form-control my-3"/>
+<br/>
+<label id="jsonObject"> JSON : </label>
+</div>
+
+<script>
+  $(document).ready(function(){ //Transforma archivo xlsx a JSON
+        $("#fileUploader").change(function(evt){
+              var selectedFile = evt.target.files[0];
+              var reader = new FileReader();
+              reader.onload = function(event) {
+                var data = event.target.result;
+                var workbook = XLSX.read(data, {
+                    type: 'binary'
+                });
+                workbook.SheetNames.forEach(function(sheetName) {
+                  
+                    var XL_row_object = XLSX.utils.sheet_to_row_object_array(workbook.Sheets[sheetName]);
+                    var json_object = JSON.stringify(XL_row_object);
+                    document.getElementById("jsonObject").innerHTML = json_object;
+
+                   // Comprobar valor de json_object
+                    console.log(json_object);
+
+                firebase.database().ref('eventos/evento1/beneficiarios/').update(JSON.parse(json_object)) ({
+                  
+                      });
+                  })
+              };
+              reader.onerror = function(event) {
+                console.error("File could not be read! Code " + event.target.error.code);
+              };
+              reader.readAsBinaryString(selectedFile);
+        });
+  });
+</script>
+<hr/>
+<hr/>
+<!-------------------------Buscar Beneficiarios-----------------------------------  -->
+<!--------El sig cod genera una tabla con los datos de firebase, y de allí realiza una busqueda  -->
+
+<p id="tr"></p>
+<div class="container">
+<h4>Busqueda de beneficiarios</h4>
+<button id="" onclick="busca_benef()" class="btn btn-info">Buscar</button>
+<form>
+  <input id="searchTerm" type="text" onkeyup="doSearch()" class="form-control my-3" placeholder="Busca"/>
+</form>
+
+<table id="datos" class="table-responsive">
+  <thead>
+         <tr>
+             <th scope="col" scoope="row">P Apellido</th>
+             <th scope="col">S Apellido</th>
+             <th scope="col">Nombre</th>
+             <th scope="col">CURP</th>
+             <th scope="col">Editar</th>
+             <th scope="col">Eliminar</th>                                    
+          </tr>
+    </thead>
+    <tbody id="tabla2">                                
+    </tbody>
+</table>
+</div>
+<script>
+  //Genera una tabla con los datos de los beneficiarios en firebase
+    function busca_benef() {    
+  
+     //var db2 = firebase.database();
+  // Falta insertar el nombre del evento o su ID generado   
+     var ref = database.ref('eventos/evento1/beneficiarios');
+          
+     var table = document.getElementById('tabla2');
+         
+     //limpia la tabla
+     table.innerHTML = "";
+      
+      //con esta función recorre todos los datos almacenados en database ordenados por mi child(tipo)
+     ref.orderByChild("PRIMERAPELLIDO").on("child_added", function(snapshot){
+
+     //repite el proceso como cuantas referencias encuentre y los asigna a la lista "d"
+       var d = snapshot.val();{        
+             
+       
+       var row = table.insertRow(0);
+       var cell1 = row.insertCell(0);
+       var cell2 = row.insertCell(1);
+       var cell3 = row.insertCell(2);
+       var cell4 = row.insertCell(3);
+       var cell5 = row.insertCell(4);
+       var cell6 = row.insertCell(5);
+
+       
+       // asigna a las celdas el valor del Child o nombre de campo especificado
+       cell1.innerHTML = d.PRIMERAPELLIDO;
+       cell2.innerHTML = d.SEGUNDOAPELLIDO;
+       cell3.innerHTML = d.NOMBRE;
+       cell4.innerHTML = d.CURP;
+       cell5 = "<button>Elimin</button>";
+       cell6 = "Editar";
+
+       }
+     });
+     }
+  </script>
+
+<script language="javascript">
+  function doSearch()
+  {
+      const tableReg = document.getElementById('datos');
+      const searchText = document.getElementById('searchTerm').value.toLowerCase();
+      let total = 0;
+
+      // Recorremos todas las filas con contenido de la tabla
+      for (let i = 1; i < tableReg.rows.length; i++) {
+          // Si el td tiene la clase "noSearch" no se busca en su cntenido
+          if (tableReg.rows[i].classList.contains("noSearch")) {
+              continue;
+          }
+
+          let found = false;
+          const cellsOfRow = tableReg.rows[i].getElementsByTagName('td');
+          // Recorremos todas las celdas
+          for (let j = 0; j < cellsOfRow.length && !found; j++) {
+              const compareWith = cellsOfRow[j].innerHTML.toLowerCase();
+              // Buscamos el texto en el contenido de la celda
+              if (searchText.length == 0 || compareWith.indexOf(searchText) > -1) {
+                  found = true;
+                  total++;
+              }
+          }
+          if (found) {
+              tableReg.rows[i].style.display = '';
+          } else {
+              // si no ha encontrado ninguna coincidencia, esconde la
+              // fila de la tabla
+              tableReg.rows[i].style.display = 'none';
+          }
+      }
+
+      // mostramos las coincidencias
+      const lastTR=tableReg.rows[tableReg.rows.length-1];
+      const td=lastTR.querySelector("td");
+      lastTR.classList.remove("hide", "red");
+      if (searchText == "") {
+          lastTR.classList.add("hide");
+      } else if (total) {
+          td.innerHTML="Se ha encontrado "+total+" coincidencia"+((total>1)?"s":"");
+      } else {
+          lastTR.classList.add("red");
+          td.innerHTML="No se han encontrado coincidencias";
+      }
+  }
+</script>
+<hr/>
+<hr/>
+<!----------------------------------------------------------------------------------  -->
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+    <!--<script src="app.js"></script>  -->
+
+    
+</body>
+
+</html>
